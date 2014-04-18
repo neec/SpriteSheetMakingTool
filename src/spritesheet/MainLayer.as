@@ -1,9 +1,6 @@
 package spritesheet
 {
-	import flash.desktop.NativeApplication;
-	import flash.display.Bitmap;
 	import flash.display.Loader;
-	import flash.display.LoaderInfo;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.filesystem.File;
@@ -32,7 +29,7 @@ package spritesheet
 		private function getFiles():void 
 		{
 			var directory:File = File.applicationDirectory.resolvePath(RESOURCE_PATH);
-			var list:Array = directory.getDirectoryListing();
+			var list:Array = filterPngs(directory.getDirectoryListing());
 			
 			_assets = new Vector.<Object>();
 			_assetsToLoad = list.length;
@@ -52,12 +49,23 @@ package spritesheet
 			}
 		}
 		
+		
+		private function filterPngs(list:Array):Array 
+		{
+			return list.filter(imgFilter);
+		}
+		
+		private function imgFilter(obj:Object, index:int, array:Array):Boolean 
+		{
+			return (obj.name.indexOf(".png") >= 0)  ||  (obj.name.indexOf(".jpg") >= 0)  ||  (obj.name.indexOf(".bmp") >= 0);
+		}
+		
+		
+		
+		
 		private function onComplete(event:Event):void
 		{
 			// TODO Auto-generated method stub
-			trace("onComplete in\n");
-			trace("onComplete in\n");
-			trace("onComplete in\n");
 			trace("onComplete in\n");
 		}		
 		
