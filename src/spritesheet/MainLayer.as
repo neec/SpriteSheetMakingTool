@@ -16,7 +16,7 @@ package spritesheet
 		private var _assets:Vector.<Object>;
 		private var _assetsToLoad:int;
 
-		
+		public static const RESOURCE_PATH:String = "res/in/";
 		
 		public function MainLayer()
 		{
@@ -31,7 +31,7 @@ package spritesheet
 		
 		private function getFiles():void 
 		{
-			var directory:File = File.applicationDirectory.resolvePath("res/in/");
+			var directory:File = File.applicationDirectory.resolvePath(RESOURCE_PATH);
 			var list:Array = directory.getDirectoryListing();
 			
 			_assets = new Vector.<Object>();
@@ -47,7 +47,7 @@ package spritesheet
 				trace(i + " : " + loader.name + "\n");
 				
 				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
-				loader.load(new URLRequest((list[i] as File).name));
+				loader.load(new URLRequest(RESOURCE_PATH + (list[i] as File).name));
 				
 			}
 		}
