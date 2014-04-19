@@ -10,9 +10,9 @@ package spritesheet
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 	import flash.net.URLRequest;
-	import flash.sampler.NewObjectSample;
 	import flash.utils.ByteArray;
-
+	
+	import spritesheet.decoder.BMPDecoder;
 	
 	public class MainLayer extends Sprite
 	{
@@ -21,14 +21,12 @@ package spritesheet
 		private var _assetsToLoad:int;
 
 		public static const RESOURCE_PATH:String = "res/in/";
+		public static const OUTPUT_RESOURCE_PATH:String = "res/out/";
 		
 		public function MainLayer()
 		{
 
-
 			getFiles();
-			
-			
 			
 		}
 		
@@ -54,7 +52,6 @@ package spritesheet
 				
 				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
 				loader.load(new URLRequest(RESOURCE_PATH + (list[i] as File).name));
-				
 			}
 		}
 		
@@ -64,9 +61,9 @@ package spritesheet
 			return list.filter(imgFilter);
 		}
 		
+		
 		private function imgFilter(obj:Object, index:int, array:Array):Boolean 
 		{
-			
 			
 			if((obj.name.indexOf(".bmp") >= 0)){
 
@@ -75,26 +72,19 @@ package spritesheet
 				var fstream:FileStream = new FileStream();
 				fstream.open(file, FileMode.READ);
 
-				
-				
 				var bmpImageStorageArray:ByteArray = new ByteArray();
 				fstream.readBytes(bmpImageStorageArray);
-					
 				
 				var decoder:BMPDecoder = new BMPDecoder();
 				var bmd:BitmapData = decoder.decode(bmpImageStorageArray);
 				var bm:Bitmap = new Bitmap(bmd,"auto",true);
-
 				
 				_assets.push({"bitmap":bm, "name":obj.name});
 				return false;
 				
 			}
-			
 			return ((obj.name.indexOf(".png") >= 0) || (obj.name.indexOf(".jpg") >= 0));
 		}
-		
-		
 		
 		
 		private function onComplete(event:Event):void
@@ -110,16 +100,47 @@ package spritesheet
 			{
 				var i:int;
 				
-				
 				var sheetGenerator:SpriteSheetGenerate =  new SpriteSheetGenerate();
 				var result:Object = sheetGenerator.generate(_assets);
 				
+				makeAtlasXmlFile( makeAtlasXmlString(result.atlas) );
 				
 				var image:Bitmap = new Bitmap(result.bitmapData);
 				addChild(image);
 				
-				
 			}
-		}		
+		}
+		
+		
+		private function makeAtlasXmlString(xmlResult:Vector.<Frame>):String
+		{
+			var xmlString:String = "<atlas>\n";
+			
+			for(var i:uint = 0; i<xmlResult.length; i++)
+			{
+				xmlString += "<atlasItem name=\"" + xmlResult[i].name + "\" x=\"" + xmlResult[i].dimension.x + "\" y=\"" + xmlResult[i].dimension.y + "\" width=\"" + xmlResult[i].dimension.width + "\" height=\"" + xmlResult[i].dimension.height + "\" />\n"
+			}
+			xmlString += "</atlas>"
+			
+			return xmlString
+		}
+		
+		private function makeAtlasXmlFile(atlasXmlString:String):void
+		{
+			
+			trace(atlasXmlString);
+			
+			var fileName:String = "atlas.xml";
+//			var xmlFile:File = File.applicationStorageDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
+
+			var xmlFile:File = File.documentsDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
+			//Android documentsDirectory   :   /mnt/sdcard
+			//iOS documentsDirectory 	   :   /var/mobile/Applications/uid/Documents
+			
+			var xmlStream:FileStream = new FileStream();
+			xmlStream.open(xmlFile, FileMode.WRITE);			
+			xmlStream.writeUTFBytes(atlasXmlString);
+			xmlStream.close();	
+		}
 	}
 }
