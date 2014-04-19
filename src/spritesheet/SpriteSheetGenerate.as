@@ -52,10 +52,17 @@ package spritesheet
 				
 				
 				//spriteSheet의 사이즈가 이미지를 모두 표현하기에 작을 경우,
-				//가로 세로 2배의 크기로 사이즈 변경 후 제작.
+				//기존 가로세로의 크기에 따라 가로 또는 세로를 2배의 크기로 사이즈 변경 후 제작.
 				if(!point)
 				{
-					size = new Point(size.x * 2, size.y * 2);
+					
+					if(size.x > size.y){
+						size = new Point(size.x , size.y *2);
+					}
+					else{
+						size = new Point(size.x *2 , size.y);
+					}
+					
 					spriteSheet.dispose();
 					spriteSheet = new BitmapData(size.x, size.y, true, 0);
 					
