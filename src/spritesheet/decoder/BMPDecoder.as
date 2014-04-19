@@ -22,7 +22,7 @@
 
 
 
-package spritesheet {
+package spritesheet.decoder {
 	import flash.display.BitmapData;
 	import flash.errors.IOError;
 	import flash.utils.ByteArray;
