@@ -13,6 +13,7 @@ package spritesheet
 	import flash.utils.ByteArray;
 	
 	import spritesheet.decoder.BMPDecoder;
+	import spritesheet.encoder.PNGEncoder;
 	
 	public class MainLayer extends Sprite
 	{
@@ -94,6 +95,7 @@ package spritesheet
 			var bitmap:Bitmap = event.target.content as Bitmap;
 			var name:String = (event.target as LoaderInfo).loader.name;
 			
+			
 			_assets.push({"bitmap":bitmap, "name":name});
 			
 			if (_assetsToLoad == 0) 
@@ -103,14 +105,19 @@ package spritesheet
 				var sheetGenerator:SpriteSheetGenerate =  new SpriteSheetGenerate();
 				var result:Object = sheetGenerator.generate(_assets);
 				
-				makeAtlasXmlFile( makeAtlasXmlString(result.atlas) );
+				makeAtlasXmlFile( makeAtlasXmlString(result.atlas) );			//atlas.xml 파일 생성.
+				
+				
+				makeSpriteSheetPNGFile(result.bitmapData);						//spritesheet.png 파일 생성.
+				
 				
 				var image:Bitmap = new Bitmap(result.bitmapData);
 				addChild(image);
 				
+				
 			}
 		}
-		
+
 		
 		private function makeAtlasXmlString(xmlResult:Vector.<Frame>):String
 		{
@@ -141,6 +148,25 @@ package spritesheet
 			xmlStream.open(xmlFile, FileMode.WRITE);			
 			xmlStream.writeUTFBytes(atlasXmlString);
 			xmlStream.close();	
+		}
+		
+		private function makeSpriteSheetPNGFile(spriteSheetBitmapData:BitmapData):void
+		{
+		
+			var encodedPngFileByteArray:ByteArray = PNGEncoder.encode(spriteSheetBitmapData);
+			
+			var fileName:String = "spritesheet.png";
+
+//			var pngFile:File = File.applicationStorageDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
+			var pngFile:File = File.documentsDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
+			//Android documentsDirectory   :   /mnt/sdcard
+			//iOS documentsDirectory 	   :   /var/mobile/Applications/uid/Documents
+			
+			var xmlStream:FileStream = new FileStream();
+			xmlStream.open(pngFile, FileMode.WRITE);			
+			xmlStream.writeBytes(encodedPngFileByteArray, 0,0);
+			xmlStream.close();	
+			
 		}
 	}
 }
