@@ -10,8 +10,10 @@ package spritesheet
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
+	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
+	import flash.system.Capabilities;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
 	import flash.utils.ByteArray;
@@ -28,6 +30,9 @@ package spritesheet
 		private var _drawRectSprite:Sprite;
 		private var _imgBorderRect:Vector.<Rectangle>;
 		private var _imgBorderBitmap:Bitmap;
+		
+		private var _displayScaleX:Number;
+		private var _displayScaleY:Number;
 		
 		public static const RESOURCE_PATH:String = "res/in/";
 		public static const OUTPUT_RESOURCE_PATH:String = "res/out/";
@@ -111,27 +116,63 @@ package spritesheet
 				var i:int;
 				
 				var sheetGenerator:SpriteSheetGenerate =  new SpriteSheetGenerate();
-				var result:Object = sheetGenerator.generate(_assets);
+				var sheetGeneratedResult:Object = sheetGenerator.generate(_assets);
 				
 				Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT; 
 				
-				makeAtlasXmlFile( makeAtlasXmlString(result.atlas) );			//atlas.xml 파일 생성.
+				makeAtlasXmlFile( makeAtlasXmlString(sheetGeneratedResult.atlas) );			//atlas.xml 파일 생성.
 				
 				
-				_spriteSheetImage = new Bitmap(result.bitmapData);
-				addChild(_spriteSheetImage);
-				_drawRectSprite = new Sprite();
+				settingForBetweenSheetAndDisplay(sheetGeneratedResult.bitmapData);			//실행 디바이스 별 display 설정.
 				
 				
-				_imgBorderRect = new Vector.<Rectangle>();
-				makeImgBorderRect(result.atlas);
+				makeImgBorderRect(sheetGeneratedResult.atlas);								//이미지별 경계를 표시할 이미지_경계_도형 정보 저장.
 				
 				_spriteSheetImage.stage.addEventListener(TouchEvent.TOUCH_BEGIN, onTouchDown);
 				_spriteSheetImage.stage.addEventListener(TouchEvent.TOUCH_END, onTouchUp);
 				
-				makeSpriteSheetPNGFile(result.bitmapData);						//spritesheet.png 파일 생성.
+				makeSpriteSheetPNGFile(sheetGeneratedResult.bitmapData);					//spritesheet.png 파일 생성.
 				
 			}
+		}
+		
+		
+		private function settingForBetweenSheetAndDisplay(sheetBitmapData:BitmapData):void
+		{
+			
+			trace(Capabilities.screenResolutionX + " : " + Capabilities.screenResolutionY);
+			
+			var tempsheetBitmapData:BitmapData;
+			tempsheetBitmapData = sheetBitmapData.clone();
+
+			var matrix:Matrix = new Matrix();
+			if(sheetBitmapData.width < Capabilities.screenResolutionX)
+			{
+				_displayScaleX = sheetBitmapData.width / Capabilities.screenResolutionX;
+			}
+			else
+			{
+				_displayScaleX =  Capabilities.screenResolutionX / sheetBitmapData.width;
+			}
+			
+			if(sheetBitmapData.height < Capabilities.screenResolutionY)
+			{
+				_displayScaleY = sheetBitmapData.height / Capabilities.screenResolutionY;
+			}
+			else
+			{
+				_displayScaleY =  Capabilities.screenResolutionY / sheetBitmapData.height;
+			}
+			matrix.scale(_displayScaleX, _displayScaleY);
+
+			
+			sheetBitmapData = new BitmapData(tempsheetBitmapData.width, tempsheetBitmapData.height, true, 0xffffff);
+			sheetBitmapData.draw(tempsheetBitmapData, matrix);
+			
+			
+			_spriteSheetImage = new Bitmap(sheetBitmapData);
+			addChild(_spriteSheetImage);
+
 		}
 		
 
@@ -157,7 +198,7 @@ package spritesheet
 		
 		private function onTouchUp(event:TouchEvent):void
 		{
-			
+			//이미지가 없는 경우 에러 발생  처리 필요.	
 			removeChild(_imgBorderBitmap);
 			_drawRectSprite = new Sprite();
 			
@@ -166,9 +207,12 @@ package spritesheet
 		
 		private function makeImgBorderRect(xmlResult:Vector.<Frame>):void
 		{
+			_drawRectSprite = new Sprite();
+			_imgBorderRect = new Vector.<Rectangle>();
+			
 			for(var i:uint = 0; i<xmlResult.length; i++)
 			{
-				var imgRect:Rectangle = new Rectangle(xmlResult[i].dimension.x, xmlResult[i].dimension.y, xmlResult[i].dimension.width, xmlResult[i].dimension.height);
+				var imgRect:Rectangle = new Rectangle(xmlResult[i].dimension.x * _displayScaleX, xmlResult[i].dimension.y  * _displayScaleY, xmlResult[i].dimension.width * _displayScaleX, xmlResult[i].dimension.height * _displayScaleY);
 				_imgBorderRect.push(imgRect);
 			}
 		}
