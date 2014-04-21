@@ -6,10 +6,14 @@ package spritesheet
 	import flash.display.LoaderInfo;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.TouchEvent;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
+	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
+	import flash.ui.Multitouch;
+	import flash.ui.MultitouchInputMode;
 	import flash.utils.ByteArray;
 	
 	import spritesheet.decoder.BMPDecoder;
@@ -20,7 +24,11 @@ package spritesheet
 		
 		private var _assets:Vector.<Object>;
 		private var _assetsToLoad:int;
-
+		private var _spriteSheetImage:Bitmap;
+		private var _drawRectSprite:Sprite;
+		private var _imgBorderRect:Vector.<Rectangle>;
+		private var _imgBorderBitmap:Bitmap;
+		
 		public static const RESOURCE_PATH:String = "res/in/";
 		public static const OUTPUT_RESOURCE_PATH:String = "res/out/";
 		
@@ -105,19 +113,65 @@ package spritesheet
 				var sheetGenerator:SpriteSheetGenerate =  new SpriteSheetGenerate();
 				var result:Object = sheetGenerator.generate(_assets);
 				
+				Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT; 
+				
 				makeAtlasXmlFile( makeAtlasXmlString(result.atlas) );			//atlas.xml 파일 생성.
 				
 				
+				_spriteSheetImage = new Bitmap(result.bitmapData);
+				addChild(_spriteSheetImage);
+				_drawRectSprite = new Sprite();
+				
+				
+				_imgBorderRect = new Vector.<Rectangle>();
+				makeImgBorderRect(result.atlas);
+				
+				_spriteSheetImage.stage.addEventListener(TouchEvent.TOUCH_BEGIN, onTouchDown);
+				_spriteSheetImage.stage.addEventListener(TouchEvent.TOUCH_END, onTouchUp);
+				
 				makeSpriteSheetPNGFile(result.bitmapData);						//spritesheet.png 파일 생성.
-				
-				
-				var image:Bitmap = new Bitmap(result.bitmapData);
-				addChild(image);
-				
 				
 			}
 		}
+		
 
+		
+		private function onTouchDown(event:TouchEvent):void
+		{
+			var imgBorderBitmapData:BitmapData = new BitmapData(_spriteSheetImage.width, _spriteSheetImage.height ,true,0xffffff);
+			for(var i:uint; i<_imgBorderRect.length; i++)
+			{
+				if(_imgBorderRect[i].contains(event.stageX, event.stageY))
+				{
+					_drawRectSprite.graphics.lineStyle(2, 0x00ff00);
+					_drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
+					
+					imgBorderBitmapData.draw(_drawRectSprite);
+					
+					_imgBorderBitmap = new Bitmap(imgBorderBitmapData);
+					addChild(_imgBorderBitmap);
+				}
+			}
+		}		
+		
+		
+		private function onTouchUp(event:TouchEvent):void
+		{
+			
+			removeChild(_imgBorderBitmap);
+			_drawRectSprite = new Sprite();
+			
+		}
+		
+		
+		private function makeImgBorderRect(xmlResult:Vector.<Frame>):void
+		{
+			for(var i:uint = 0; i<xmlResult.length; i++)
+			{
+				var imgRect:Rectangle = new Rectangle(xmlResult[i].dimension.x, xmlResult[i].dimension.y, xmlResult[i].dimension.width, xmlResult[i].dimension.height);
+				_imgBorderRect.push(imgRect);
+			}
+		}
 		
 		private function makeAtlasXmlString(xmlResult:Vector.<Frame>):String
 		{
