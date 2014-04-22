@@ -180,7 +180,7 @@ package spritesheet
 				matrix.scale(_displayScaleX, _displayScaleX);
 				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, 0xffffff);
 			}
-			else
+			else if(sheetBitmapData.width < sheetBitmapData.height)
 			{
 				if(sheetBitmapData.height < Capabilities.screenResolutionY)
 				{
@@ -193,7 +193,35 @@ package spritesheet
 				matrix.scale(_displayScaleY, _displayScaleY);
 				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
 			}
-			
+			else
+			{
+				if(Capabilities.screenResolutionX < Capabilities.screenResolutionY)
+				{
+					if(sheetBitmapData.width < Capabilities.screenResolutionX)
+					{
+						_displayScaleX = Capabilities.screenResolutionX / sheetBitmapData.width;
+					}
+					else
+					{
+						_displayScaleX =  sheetBitmapData.width / Capabilities.screenResolutionX;
+					}
+					matrix.scale(_displayScaleX, _displayScaleX);
+					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, 0xffffff);
+				}
+				else
+				{
+					if(sheetBitmapData.height < Capabilities.screenResolutionY)
+					{
+						_displayScaleY = Capabilities.screenResolutionY / sheetBitmapData.height;
+					}
+					else
+					{
+						_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
+					}
+					matrix.scale(_displayScaleY, _displayScaleY);
+					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
+				}
+			}
 		
 			sheetBitmapData.draw(tempsheetBitmapData, matrix);
 			
