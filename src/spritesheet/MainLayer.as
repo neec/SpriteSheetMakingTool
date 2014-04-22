@@ -163,35 +163,39 @@ package spritesheet
 			
 			trace(Capabilities.screenResolutionX + " : " + Capabilities.screenResolutionY);
 			
-			var tempsheetBitmapData:BitmapData;
-			tempsheetBitmapData = sheetBitmapData.clone();
+			var tempsheetBitmapData:BitmapData = sheetBitmapData.clone();
 
 			var matrix:Matrix = new Matrix();
-			if(sheetBitmapData.width < Capabilities.screenResolutionX)
+			
+			if(sheetBitmapData.width > sheetBitmapData.height)
 			{
-				_displayScaleX = sheetBitmapData.width / Capabilities.screenResolutionX;
+				if(sheetBitmapData.width < Capabilities.screenResolutionX)
+				{
+					_displayScaleX = Capabilities.screenResolutionX / sheetBitmapData.width;
+				}
+				else
+				{
+					_displayScaleX =  sheetBitmapData.width / Capabilities.screenResolutionX;
+				}
+				matrix.scale(_displayScaleX, _displayScaleX);
+				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, 0xffffff);
 			}
 			else
 			{
-				_displayScaleX =  Capabilities.screenResolutionX / sheetBitmapData.width;
+				if(sheetBitmapData.height < Capabilities.screenResolutionY)
+				{
+					_displayScaleY = Capabilities.screenResolutionY / sheetBitmapData.height;
+				}
+				else
+				{
+					_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
+				}
+				matrix.scale(_displayScaleY, _displayScaleY);
+				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
 			}
 			
-			
-			
-			if(sheetBitmapData.height < Capabilities.screenResolutionY)
-			{
-				_displayScaleY = Capabilities.screenResolutionY / sheetBitmapData.height;
-			}
-			else
-			{
-				_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
-			}
-			matrix.scale(_displayScaleX, _displayScaleY);
-
-			
-			sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
+		
 			sheetBitmapData.draw(tempsheetBitmapData, matrix);
-			
 			
 			_spriteSheetImage = new Bitmap(sheetBitmapData);
 			addChild(_spriteSheetImage);
@@ -246,7 +250,15 @@ package spritesheet
 			
 			for(var i:uint = 0; i<xmlResult.length; i++)
 			{
-				var imgRect:Rectangle = new Rectangle(xmlResult[i].dimension.x * _displayScaleX, xmlResult[i].dimension.y  * _displayScaleY, xmlResult[i].dimension.width * _displayScaleX, xmlResult[i].dimension.height * _displayScaleY);
+				var imgRect:Rectangle;
+				if( _displayScaleX )
+				{
+					imgRect = new Rectangle(xmlResult[i].dimension.x * _displayScaleX, xmlResult[i].dimension.y  * _displayScaleX, xmlResult[i].dimension.width * _displayScaleX, xmlResult[i].dimension.height * _displayScaleX);
+				}
+				else
+				{
+					imgRect = new Rectangle(xmlResult[i].dimension.x * _displayScaleY, xmlResult[i].dimension.y  * _displayScaleY, xmlResult[i].dimension.width * _displayScaleY, xmlResult[i].dimension.height * _displayScaleY);
+				}
 				_imgBorderRect.push(imgRect);
 			}
 		}
