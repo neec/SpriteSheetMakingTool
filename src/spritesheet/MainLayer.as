@@ -251,7 +251,7 @@ package spritesheet
 					{
 						var drawRectSprite:Sprite = new Sprite();
 						
-						drawRectSprite.graphics.lineStyle(2, 0x00ff00);
+						drawRectSprite.graphics.lineStyle(2, 0xff00ff);
 						drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
 						
 						imgBorderBitmapData.draw(drawRectSprite);
