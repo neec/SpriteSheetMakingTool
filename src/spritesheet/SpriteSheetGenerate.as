@@ -28,8 +28,7 @@ package spritesheet
 		public function generate(frames:Vector.<Object>):Object 	
 		{
 			
-			var size:Point = new Point(256, 256);
-			//	 var size:Point = new Point(512, 512);
+				 var size:Point = new Point(512, 512);
 			//	 var size:Point = new Point(1024, 1024);
 			//	 var size:Point = new Point(2048, 2048);
 			//	 var size:Point = new Point(1080, 1920);	 //갤럭시 노트3 해상도
@@ -56,11 +55,13 @@ package spritesheet
 				if(!point)
 				{
 					
-					if(size.x > size.y){
-						size = new Point(size.x , size.y *2);
+					if(size.x > size.y)
+					{
+						size = new Point(size.x , size.y * 2);
 					}
-					else{
-						size = new Point(size.x *2 , size.y);
+					else
+					{
+						size = new Point(size.x * 2 , size.y);
 					}
 					
 					spriteSheet.dispose();
@@ -86,6 +87,18 @@ package spritesheet
 				
 			}
 			
+
+		
+			while(_insertionTree.length)
+			{
+				_insertionTree.pop();
+			}
+			
+			while(_insertedImagesMap.length)
+			{
+				_insertedImagesMap.pop();
+			}
+
 			trace("size : " + size.x +  ", " + size.y);
 			return {"bitmapData": spriteSheet, "atlas": atlas};
 			
