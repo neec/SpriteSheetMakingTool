@@ -32,7 +32,6 @@ package spritesheet
 		private var _assets:Vector.<Object>;
 		private var _assetsToLoad:int;
 		private var _spriteSheetImage:Bitmap;
-		private var _drawRectSprite:Sprite;
 		private var _imgBorderRect:Vector.<Rectangle>;
 		private var _imgBorderBitmap:Bitmap;
 		
@@ -250,10 +249,12 @@ package spritesheet
 				{
 					if(_imgBorderRect[i].contains(event.stageX, event.stageY))
 					{
-						_drawRectSprite.graphics.lineStyle(2, 0x00ff00);
-						_drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
+						var drawRectSprite:Sprite = new Sprite();
 						
-						imgBorderBitmapData.draw(_drawRectSprite);
+						drawRectSprite.graphics.lineStyle(2, 0x00ff00);
+						drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
+						
+						imgBorderBitmapData.draw(drawRectSprite);
 						
 						_imgBorderBitmap = new Bitmap(imgBorderBitmapData);
 						addChild(_imgBorderBitmap);
@@ -269,7 +270,6 @@ package spritesheet
 			if( true == _touchFlag )
 			{
 				removeChild(_imgBorderBitmap);
-				_drawRectSprite = new Sprite();
 				_touchFlag = false;
 			}
 		}
@@ -282,7 +282,7 @@ package spritesheet
 		 */
 		private function makeImgBorderRect(xmlResult:Vector.<Frame>):void
 		{
-			_drawRectSprite = new Sprite();
+			
 			_imgBorderRect = new Vector.<Rectangle>();
 			
 			for(var i:uint = 0; i<xmlResult.length; i++)
