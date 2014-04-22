@@ -34,8 +34,12 @@ package spritesheet
 		private var _displayScaleX:Number;
 		private var _displayScaleY:Number;
 		
+		private var _touchFlag:Boolean = false;
+		
 		public static const RESOURCE_PATH:String = "res/in/";
 		public static const OUTPUT_RESOURCE_PATH:String = "res/out/";
+		
+		
 		
 		public function MainLayer()
 		{
@@ -179,18 +183,22 @@ package spritesheet
 		
 		private function onTouchDown(event:TouchEvent):void
 		{
-			var imgBorderBitmapData:BitmapData = new BitmapData(_spriteSheetImage.width, _spriteSheetImage.height ,true,0xffffff);
-			for(var i:uint; i<_imgBorderRect.length; i++)
+			if( false == _touchFlag )
 			{
-				if(_imgBorderRect[i].contains(event.stageX, event.stageY))
+				var imgBorderBitmapData:BitmapData = new BitmapData(_spriteSheetImage.width, _spriteSheetImage.height ,true,0xffffff);
+				for(var i:uint; i<_imgBorderRect.length; i++)
 				{
-					_drawRectSprite.graphics.lineStyle(2, 0x00ff00);
-					_drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
-					
-					imgBorderBitmapData.draw(_drawRectSprite);
-					
-					_imgBorderBitmap = new Bitmap(imgBorderBitmapData);
-					addChild(_imgBorderBitmap);
+					if(_imgBorderRect[i].contains(event.stageX, event.stageY))
+					{
+						_drawRectSprite.graphics.lineStyle(2, 0x00ff00);
+						_drawRectSprite.graphics.drawRect(_imgBorderRect[i].x, _imgBorderRect[i].y, _imgBorderRect[i].width, _imgBorderRect[i].height);
+						
+						imgBorderBitmapData.draw(_drawRectSprite);
+						
+						_imgBorderBitmap = new Bitmap(imgBorderBitmapData);
+						addChild(_imgBorderBitmap);
+						_touchFlag = true;
+					}
 				}
 			}
 		}		
@@ -198,10 +206,12 @@ package spritesheet
 		
 		private function onTouchUp(event:TouchEvent):void
 		{
-			//이미지가 없는 경우 에러 발생  처리 필요.	
-			removeChild(_imgBorderBitmap);
-			_drawRectSprite = new Sprite();
-			
+			if( true == _touchFlag )
+			{
+				removeChild(_imgBorderBitmap);
+				_drawRectSprite = new Sprite();
+				_touchFlag = false;
+			}
 		}
 		
 		
