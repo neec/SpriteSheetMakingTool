@@ -80,6 +80,12 @@ package spritesheet
 		}
 		
 		
+		/**
+		 * 
+		 * loader가 지원하지 않는 bmp파일 BMPDecoder를 통해서 따로 _assets에 저장, false를 반환하여 loader가 처리하지 않도록 처리
+		 * loader가 지원하는 png, jpg 파일은 true를 반환하여 loader가 처리.
+		 * 
+		 */
 		private function imgFilter(obj:Object, index:int, array:Array):Boolean 
 		{
 			
@@ -137,10 +143,21 @@ package spritesheet
 				
 				makeSpriteSheetPNGFile(sheetGeneratedResult.bitmapData);					//spritesheet.png 파일 생성.
 				
+				
+				while(_assets.length)
+				{
+					_assets.pop();
+				}
+				
 			}
 		}
 		
 		
+		/**
+		 * 
+		 * 생성된 spriteSheet와 디바이스의 크기를 비교하여 화면에 출력할 이미지 크기 변경.
+		 * 
+		 */
 		private function settingForBetweenSheetAndDisplay(sheetBitmapData:BitmapData):void
 		{
 			
@@ -159,18 +176,20 @@ package spritesheet
 				_displayScaleX =  Capabilities.screenResolutionX / sheetBitmapData.width;
 			}
 			
+			
+			
 			if(sheetBitmapData.height < Capabilities.screenResolutionY)
 			{
-				_displayScaleY = sheetBitmapData.height / Capabilities.screenResolutionY;
+				_displayScaleY = Capabilities.screenResolutionY / sheetBitmapData.height;
 			}
 			else
 			{
-				_displayScaleY =  Capabilities.screenResolutionY / sheetBitmapData.height;
+				_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
 			}
 			matrix.scale(_displayScaleX, _displayScaleY);
 
 			
-			sheetBitmapData = new BitmapData(tempsheetBitmapData.width, tempsheetBitmapData.height, true, 0xffffff);
+			sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
 			sheetBitmapData.draw(tempsheetBitmapData, matrix);
 			
 			
@@ -215,6 +234,11 @@ package spritesheet
 		}
 		
 		
+		/**
+		 * 
+		 * sheet의 각 이미지 Frame을 _imgBorderRect 에 저장.
+		 * 
+		 */
 		private function makeImgBorderRect(xmlResult:Vector.<Frame>):void
 		{
 			_drawRectSprite = new Sprite();
@@ -258,6 +282,12 @@ package spritesheet
 			xmlStream.close();	
 		}
 		
+		/**
+		 * 
+		 * BitmapData 이미지를 PNGEncoder를 통해 png ByteArray 로 변환후 파일 출력.
+		 * PNGEncode 사용시 시간이 오래걸림, 수정 필요.
+		 * 
+		 */
 		private function makeSpriteSheetPNGFile(spriteSheetBitmapData:BitmapData):void
 		{
 		
