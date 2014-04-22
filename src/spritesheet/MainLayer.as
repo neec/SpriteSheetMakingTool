@@ -14,12 +14,17 @@ package spritesheet
 	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
 	import flash.system.Capabilities;
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
 	import flash.utils.ByteArray;
 	
 	import spritesheet.decoder.BMPDecoder;
-	import spritesheet.encoder.PNGEncoder;
+	import spritesheet.encoder.AsyncPNGEncoder;
+	import spritesheet.encoder.supportClasses.AsyncImageEncoderEvent;
+	import spritesheet.encoder.supportClasses.IAsyncImageEncoder;
 	
 	public class MainLayer extends Sprite
 	{
@@ -36,8 +41,12 @@ package spritesheet
 		
 		private var _touchFlag:Boolean = false;
 		
+		private var _asyncPNGEncoder:IAsyncImageEncoder;
+		private var _pngCompleteInfoField:TextField;
+		
 		public static const RESOURCE_PATH:String = "res/in/";
 		public static const OUTPUT_RESOURCE_PATH:String = "res/out/";
+		public static const WHITE_BACKGROUND_COLOR:uint = 0xffffff;
 		
 		
 		
@@ -178,7 +187,7 @@ package spritesheet
 					_displayScaleX =  sheetBitmapData.width / Capabilities.screenResolutionX;
 				}
 				matrix.scale(_displayScaleX, _displayScaleX);
-				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, 0xffffff);
+				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, WHITE_BACKGROUND_COLOR);
 			}
 			else if(sheetBitmapData.width < sheetBitmapData.height)
 			{
@@ -191,7 +200,7 @@ package spritesheet
 					_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
 				}
 				matrix.scale(_displayScaleY, _displayScaleY);
-				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
+				sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, WHITE_BACKGROUND_COLOR);
 			}
 			else
 			{
@@ -206,7 +215,7 @@ package spritesheet
 						_displayScaleX =  sheetBitmapData.width / Capabilities.screenResolutionX;
 					}
 					matrix.scale(_displayScaleX, _displayScaleX);
-					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, 0xffffff);
+					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleX, tempsheetBitmapData.height * _displayScaleX, true, WHITE_BACKGROUND_COLOR);
 				}
 				else
 				{
@@ -219,7 +228,7 @@ package spritesheet
 						_displayScaleY =  sheetBitmapData.height / Capabilities.screenResolutionY;
 					}
 					matrix.scale(_displayScaleY, _displayScaleY);
-					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, 0xffffff);
+					sheetBitmapData = new BitmapData(tempsheetBitmapData.width * _displayScaleY, tempsheetBitmapData.height * _displayScaleY, true, WHITE_BACKGROUND_COLOR);
 				}
 			}
 		
@@ -236,7 +245,7 @@ package spritesheet
 		{
 			if( false == _touchFlag )
 			{
-				var imgBorderBitmapData:BitmapData = new BitmapData(_spriteSheetImage.width, _spriteSheetImage.height ,true,0xffffff);
+				var imgBorderBitmapData:BitmapData = new BitmapData(_spriteSheetImage.width, _spriteSheetImage.height ,true,WHITE_BACKGROUND_COLOR);
 				for(var i:uint; i<_imgBorderRect.length; i++)
 				{
 					if(_imgBorderRect[i].contains(event.stageX, event.stageY))
@@ -321,29 +330,72 @@ package spritesheet
 			xmlStream.writeUTFBytes(atlasXmlString);
 			xmlStream.close();	
 		}
+
+		
 		
 		/**
 		 * 
-		 * BitmapData 이미지를 PNGEncoder를 통해 png ByteArray 로 변환후 파일 출력.
-		 * PNGEncode 사용시 시간이 오래걸림, 수정 필요.
+		 * BitmapData 이미지를 AsyncPNGEncoder를 통해 png ByteArray 로 변환후 파일 출력.
+		 * 비동기식으로 동작.
 		 * 
 		 */
 		private function makeSpriteSheetPNGFile(spriteSheetBitmapData:BitmapData):void
 		{
 		
-			var encodedPngFileByteArray:ByteArray = PNGEncoder.encode(spriteSheetBitmapData);
 			
-			var fileName:String = "spritesheet.png";
+			_asyncPNGEncoder = new AsyncPNGEncoder();
+			
+			_asyncPNGEncoder.addEventListener(AsyncImageEncoderEvent.PROGRESS, encodeProgressHandler);
+			_asyncPNGEncoder.addEventListener(AsyncImageEncoderEvent.COMPLETE, encodeCompleteHandler);
+			
+			
+			var format:TextFormat = new TextFormat();
+			format.size = 48;
+			
+			
+			_pngCompleteInfoField = new TextField();
+			_pngCompleteInfoField.defaultTextFormat = format;
+			_pngCompleteInfoField.autoSize = TextFieldAutoSize.CENTER;
+			_pngCompleteInfoField.x = (Capabilities.screenResolutionX / 2) - (_pngCompleteInfoField.width / 2);
+			_pngCompleteInfoField.y = Capabilities.screenResolutionY - 200;
+			trace(_pngCompleteInfoField.x + " : " + _pngCompleteInfoField.y);
+			_pngCompleteInfoField.text = "[spritesheet.png] generation start.";
+			addChild(_pngCompleteInfoField);
+			
+			_asyncPNGEncoder.start(spriteSheetBitmapData, 100);
+			
+			
+		}
+		
+		private function encodeProgressHandler(event:AsyncImageEncoderEvent):void
+		{
+			_pngCompleteInfoField.text = "[spritesheet.png] generation : " + Math.floor(event.percentComplete) + "% complete";
+			trace("encoding progress:", Math.floor(event.percentComplete)+"% complete");
+		}
+		
+		private function encodeCompleteHandler(event:AsyncImageEncoderEvent):void
+		{
+			_asyncPNGEncoder.removeEventListener(AsyncImageEncoderEvent.PROGRESS, encodeProgressHandler);
+			_asyncPNGEncoder.removeEventListener(AsyncImageEncoderEvent.COMPLETE, encodeCompleteHandler);
 
-//			var pngFile:File = File.applicationStorageDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
+			trace("encoding completed:", _asyncPNGEncoder.encodedBytes.length + " bytes");
+				
+			var fileName:String = "spritesheet.png";
+			
+			//			var pngFile:File = File.applicationStorageDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
 			var pngFile:File = File.documentsDirectory.resolvePath(OUTPUT_RESOURCE_PATH + fileName);
 			//Android documentsDirectory   :   /mnt/sdcard
 			//iOS documentsDirectory 	   :   /var/mobile/Applications/uid/Documents
 			
 			var xmlStream:FileStream = new FileStream();
 			xmlStream.open(pngFile, FileMode.WRITE);			
-			xmlStream.writeBytes(encodedPngFileByteArray, 0,0);
-			xmlStream.close();	
+			xmlStream.writeBytes(_asyncPNGEncoder.encodedBytes, 0,0);
+			xmlStream.close();
+			
+			_pngCompleteInfoField.text = "[spritesheet.png] generation : 100% completed.";
+
+			
+			_asyncPNGEncoder.dispose();				//PNG인코더 메모리 dispose
 			
 		}
 	}
