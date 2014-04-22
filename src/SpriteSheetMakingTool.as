@@ -1,3 +1,8 @@
+/**
+ *
+ *  빌드 환경 :  Adobe AIR SDK 13.0, Android
+ *  
+ */
 package
 {
 	import flash.desktop.NativeApplication;
